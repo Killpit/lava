@@ -1,0 +1,37 @@
+name: Install Packages
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    build:
+        runs-on: self-hosted
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Rust setup
+              uses: dtolnay/rust-toolchain@stable
+
+            - name: Rust cache
+              uses: swatinem/rust-cache@v2
+              with:
+                workspaces: 'src-tauri -> target'
+
+            
+
+            - name: YARN cache
+              uses: c-hive/gha-yarn-cache@v2
+
+            - name: Install wasm-pack
+              run: cargo install wasm-pack
+
+            - name: Install NPM dependencies
+              run: npm install
+
+            - name: Install Anchor CLI
+              run: | 
+                sudo chmod +x install-anchor.sh
+                ./install-anchor.sh
