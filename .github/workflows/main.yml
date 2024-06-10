@@ -1,11 +1,11 @@
-name: Install Packages
+name: Build, Analyze and Deploy
 on:
     push:
         branches:
             - master
 
 jobs:
-    build:
+    build-analyze-deploy:
         runs-on: self-hosted
 
         steps:
@@ -20,7 +20,15 @@ jobs:
               with:
                 workspaces: 'src-tauri -> target'
 
-            
+            - name: Set nodeJS
+              uses: actions/setup-node@v3
+              with:
+                node-version: 'lts/*'
+
+            - name: Set YARN
+              uses: borales/actions-yarn@v4
+              with:
+                cmd: install
 
             - name: YARN cache
               uses: c-hive/gha-yarn-cache@v2
@@ -30,8 +38,3 @@ jobs:
 
             - name: Install NPM dependencies
               run: npm install
-
-            - name: Install Anchor CLI
-              run: | 
-                sudo chmod +x install-anchor.sh
-                ./install-anchor.sh
