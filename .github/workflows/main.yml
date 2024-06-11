@@ -38,3 +38,8 @@ jobs:
 
             - name: Install NPM dependencies
               run: npm install
+
+            - name: Create Solana development environment
+              run: |
+                sudo chmod +x install-solana-anchor-and-soda.sh
+                ./install-solana-anchor-and-soda.sh
