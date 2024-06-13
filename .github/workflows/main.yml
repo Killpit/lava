@@ -1,45 +1,75 @@
 name: Build, Analyze and Deploy
+
 on:
-    push:
-        branches:
-            - master
+  push:
+    branches:
+      - master
 
 jobs:
-    build-analyze-deploy:
-        runs-on: self-hosted
+  build-analyze-deploy:
+    runs-on: self-hosted
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Rust setup
-              uses: dtolnay/rust-toolchain@stable
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
 
-            - name: Rust cache
-              uses: swatinem/rust-cache@v2
-              with:
-                workspaces: 'src-tauri -> target'
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
 
-            - name: Set nodeJS
-              uses: actions/setup-node@v3
-              with:
-                node-version: 'lts/*'
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
 
-            - name: Set YARN
-              uses: borales/actions-yarn@v4
-              with:
-                cmd: install
+      - name: Set YARN
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
 
-            - name: YARN cache
-              uses: c-hive/gha-yarn-cache@v2
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/yarn
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-
 
-            - name: Install wasm-pack
-              run: cargo install wasm-pack
+      - name: Install wasm-pack
+        run: cargo install wasm-pack
 
-            - name: Install NPM dependencies
-              run: npm install
+      - name: Install NPM dependencies
+        run: npm install
 
-            - name: Create Solana development environment
-              run: |
-                sudo chmod +x install-solana-anchor-and-soda.sh
-                ./install-solana-anchor-and-soda.sh
+      - name: Install NVM (Node Version Manager)
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install lts/*
+          nvm use lts/*
+          nvm alias default lts/*
+          npm install -g yarn
+
+      - name: Install Solana CLI
+        run: |
+          sudo apt-get update && sudo apt-get upgrade && sudo apt-get install -y pkg-config build-essential libudev-dev libssl-dev || true
+          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm --version
+          anchor --version
+          
+      - name: Install Soda CLI
+        run: cargo install soda-cli
