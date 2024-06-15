@@ -1,0 +1,9 @@
+name: Secure Build
+
+on:
+        push:
+          branches:
+            - master
+jobs:
+    install-dependencies:
+        runs-on: self-hosted

@@ -1,4 +1,4 @@
-name: Build, Analyze and Deploy
+name: Install Dependencies
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - master
 
 jobs:
-  build-analyze-deploy:
+  install-dependencies:
     runs-on: self-hosted
 
     steps:
@@ -73,3 +73,21 @@ jobs:
           
       - name: Install Soda CLI
         run: cargo install soda-cli
+
+      - name: Install Windi
+        run: npm i -g windicss
+
+      - name: Install Cargo Audit
+        run: cargo install cargo-audit
+
+      - name: Install Hongfuzz
+        run: cargo install honggfuzz
+
+      - name: Install Trident
+        run: cargo install trident-cli
+
+      - name: Install Clippy
+        run: rustup component add clippy
+
+      - name: Install Cargo Geiger
+        run: cargo install --locked cargo-geiger
