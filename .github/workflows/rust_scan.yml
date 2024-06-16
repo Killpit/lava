@@ -1,0 +1,12 @@
+name: Rust Security Scan
+
+on:
+        push:
+          branches:
+            - master
+jobs:
+    install-dependencies:
+        runs-on: self-hosted
+
+        steps:
+          - 

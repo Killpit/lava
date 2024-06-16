@@ -1,4 +1,4 @@
-name: Secure Build
+name: JS/TS Security Scan
 
 on:
         push:
@@ -7,3 +7,6 @@ on:
 jobs:
     install-dependencies:
         runs-on: self-hosted
+
+        steps:
+          - 
