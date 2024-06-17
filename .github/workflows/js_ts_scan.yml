@@ -1,12 +1,44 @@
-name: JS/TS Security Scan
+name: JavaScript/TypeScript Security Scan and Test
 
 on:
-        push:
-          branches:
-            - master
-jobs:
-    install-dependencies:
-        runs-on: self-hosted
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/**'
+      - 'client/**'
+      - 'public/**'
+      - '*.js'
+      - '*.ts'
 
-        steps:
-          - 
+jobs:
+  js-ts-security-scan-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run security audit for dependencies
+        run: npm audit
+
+      - name: Run unit tests
+        run: npm test -- --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
