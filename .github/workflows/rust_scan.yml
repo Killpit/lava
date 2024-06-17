@@ -1,12 +1,61 @@
 name: Rust Security Scan
 
 on:
-        push:
-          branches:
-            - master
-jobs:
-    install-dependencies:
-        runs-on: self-hosted
+  push:
+    branches:
+      - master
+    paths:
+      - 'src/**'
+      - 'Cargo.lock'
+      - 'Cargo.toml'
+      - 'Anchor.toml'
 
-        steps:
-          - 
+jobs:
+  rust-security-scan:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust and dependencies
+        run: |
+          # Install Rust using rustup if not already installed
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup update stable
+          rustup component add clippy rustfmt
+          cargo install cargo-audit trident-cli hongfuzz 
+          cargo install --locked cargo-geiger
+
+      - name: Install Solana CLI
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y pkg-config build-essential libudev-dev libssl-dev
+          sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+  
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm --version
+          anchor --version
+            
+      - name: Install Soda CLI
+        run: cargo install soda-cli
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Run Rust security audit on crates
+        uses: rustsec/audit-check@v1.4.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Inspect Unsafe Rust usage in a Rust crate and its dependencies
+        run: cargo geiger
+
+      - name: Run fuzz tests
+        run: |
+          trident init
+          trident fuzz
