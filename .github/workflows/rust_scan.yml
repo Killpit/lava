@@ -25,8 +25,30 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           rustup update stable
           rustup component add clippy rustfmt
-          cargo install cargo-audit trident-cli hongfuzz 
+          cargo install cargo-audit trident-cli hongfuzz
           cargo install --locked cargo-geiger
+
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+          cache-dependency-path: './package-lock.json'
+
+      - name: Set YARN
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/yarn
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-
 
       - name: Install Solana CLI
         run: |
@@ -34,13 +56,13 @@ jobs:
           sudo apt-get install -y pkg-config build-essential libudev-dev libssl-dev
           sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-  
+
       - name: Install Anchor CLI
         run: |
           cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
           avm --version
           anchor --version
-            
+
       - name: Install Soda CLI
         run: cargo install soda-cli
 
