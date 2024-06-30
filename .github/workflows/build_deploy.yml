@@ -12,3 +12,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Build Anchor Program
+        run: anchor build
+
+      - name: Tests Anchor Program
+        run: anchor test
+
+      - name: Deploys Anchor Program
+        run: anchor deploy
+
+      - name: Deploy Website to localhost
+        run: npm run dev
